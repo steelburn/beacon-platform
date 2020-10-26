@@ -8,6 +8,7 @@ import argparse
 aliases = {
     'bulk-register': pbapi.PbApi.bulk_register,
     'create-attachment': pbapi.PbApi.create_attachment,
+    'activate-beacon': pbapi.PbApi.activate_beacon,
     'deactivate-beacon': pbapi.PbApi.deactivate_beacon,
     'delete-attachment': pbapi.PbApi.delete_attachment,
     'delete-beacon': pbapi.PbApi.delete_beacon,
@@ -16,6 +17,7 @@ aliases = {
     'list-beacons': pbapi.PbApi.list_beacons,
     'register-beacon': pbapi.PbApi.register_beacon,
     'set-places':  pbapi.PbApi.set_places,
+    'set-property':  pbapi.PbApi.set_property,
 }
 
 
@@ -40,6 +42,10 @@ def main():
                              'needed if using an access token or a JSON service account file.')
     parser.add_argument('--access-token',
                         help='OAuth2 access token ')
+    parser.add_argument('--client-secret',
+                        help='Path to a JSON file containing oauth client ID secrets.')
+    parser.add_argument('--print-results',
+                        action='store_true', default=False, help='Print the command\'s return value to stdout.')
 
     args, extra_args = parser.parse_known_args()
 
@@ -64,6 +70,8 @@ def main():
         pb_client = pbapi.build_client_from_json(args.service_account_creds)
     elif args.access_token is not None:
         pb_client = pbapi.build_client_from_access_token(args.access_token)
+    elif args.client_secret is not None:
+        pb_client = pbapi.build_client_from_client_id_json(args.client_secret)
     else:
         try:
             pb_client = pbapi.build_client_from_app_default()
@@ -75,7 +83,7 @@ def main():
     if args.command in aliases:
         try:
             result = aliases[args.command](pb_client, extra_args + ['--print-results'])
-            if result is not None:
+            if result is not None and args.print_results:
                 print result
         except ValueError, e:
             print('"%s" failed with message %s' % (args.command, e.message))
